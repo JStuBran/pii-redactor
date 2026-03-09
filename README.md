@@ -1,3 +1,12 @@
+---
+title: Pii Redactor x402
+emoji: 🦞
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 8080
+---
+
 # PII Redactor
 
 > x402 PII redaction API for AI agents — powered by [Microsoft Presidio](https://microsoft.github.io/presidio/)
