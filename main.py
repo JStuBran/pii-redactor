@@ -103,23 +103,28 @@ class AnalyzeResponse(BaseModel):
 # x402 payment middleware
 # ---------------------------------------------------------------------------
 
-X402_RESPONSE = {
-    "x402Version": 1,
-    "accepts": [
-        {
-            "scheme": "exact",
-            "network": "eip155:8453",
-            "maxAmountRequired": "10000",
-            "resource": "https://pii-redactor.up.railway.app/api/redact",
-            "description": "PII redaction",
-            "mimeType": "application/json",
-            "payTo": WALLET_ADDRESS,
-            "maxTimeoutSeconds": 300,
-            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-            "extra": {"name": "USDC", "decimals": 6},
-        }
-    ],
-}
+BASE_URL = "https://pii-redactor-production-1dd5.up.railway.app"
+
+
+def build_x402_response(path: str) -> dict:
+    resource = f"{BASE_URL}{path}"
+    return {
+        "x402Version": 1,
+        "accepts": [
+            {
+                "scheme": "exact",
+                "network": "eip155:8453",
+                "maxAmountRequired": "10000",
+                "resource": resource,
+                "description": "PII redaction",
+                "mimeType": "application/json",
+                "payTo": WALLET_ADDRESS,
+                "maxTimeoutSeconds": 300,
+                "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                "extra": {"name": "USDC", "decimals": 6},
+            }
+        ],
+    }
 
 
 async def payment_middleware(request: Request, call_next):
@@ -127,7 +132,7 @@ async def payment_middleware(request: Request, call_next):
         payment_header = request.headers.get("X-Payment")
         if not payment_header:
             logger.info("402 — missing X-Payment header for %s", request.url.path)
-            return JSONResponse(status_code=402, content=X402_RESPONSE)
+            return JSONResponse(status_code=402, content=build_x402_response(request.url.path))
     return await call_next(request)
 
 
