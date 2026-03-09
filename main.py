@@ -237,3 +237,10 @@ async def analyze(body: TextRequest):
     logger.info("analyze — %d texts, %.1f ms", len(body.texts), elapsed_ms)
 
     return AnalyzeResponse(results=results)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
