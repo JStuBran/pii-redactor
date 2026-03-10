@@ -228,3 +228,65 @@ curl -X POST https://pii-redactor.up.railway.app/api/redact \
 ## License
 
 MIT
+---
+
+## 🛠 MCP Integration
+
+The PII Redactor is **MCP-compatible** — it can be used as a tool by Claude, Cursor, and any MCP-enabled AI client via an MCP-to-REST bridge.
+
+An `mcp.json` file at the root of this repo describes the tool schema. MCP hosts like HuggingFace and OpenClaw use this file for automatic tool discovery.
+
+### Add to Claude Desktop
+
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "pii-redactor": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://pii-redactor-production-1dd5.up.railway.app/mcp"
+      ]
+    }
+  }
+}
+```
+
+> **Note:** The `/mcp` endpoint serves the MCP manifest. The underlying REST API handles all tool calls. If using a local MCP-to-REST proxy, point it at `https://pii-redactor-production-1dd5.up.railway.app`.
+
+### Add to Cursor
+
+In Cursor settings → **MCP Tools** → **Add Tool**:
+
+```json
+{
+  "name": "pii-redactor",
+  "url": "https://pii-redactor-production-1dd5.up.railway.app",
+  "schema": "https://pii-redactor-production-1dd5.up.railway.app/mcp.json"
+}
+```
+
+### Available MCP Tools
+
+| Tool | Description |
+|---|---|
+| `redact_pii` | Replace PII in text with `[ENTITY_TYPE]` placeholders |
+| `analyze_pii` | Detect PII entities with positions and confidence scores |
+
+### Example Agent Usage
+
+Once configured, Claude or any MCP client can call:
+
+```
+Use the pii-redactor tool to redact PII from this text:
+"Please contact John Smith at john.smith@acme.com or 415-555-0192."
+```
+
+The agent will automatically call `POST /api/redact` and return the redacted result.
+
+### x402 Payment Note
+
+Production calls require an `X-Payment` header with a valid USDC payment proof on Base mainnet. For development/testing, deploy your own instance with `PAYMENT_REQUIRED=false`.

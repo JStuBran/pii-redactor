@@ -165,6 +165,44 @@ async def health():
     return {"status": "ok", "version": VERSION}
 
 
+@app.get("/mcp")
+@app.get("/mcp.json")
+async def mcp_manifest():
+    """MCP (Model Context Protocol) manifest — enables agentic tool discovery by Claude, Cursor, etc."""
+    import json
+    from pathlib import Path
+    from fastapi.responses import JSONResponse
+
+    mcp_path = Path(__file__).parent / "mcp.json"
+    if mcp_path.exists():
+        return JSONResponse(content=json.loads(mcp_path.read_text()))
+    # Inline fallback manifest
+    return JSONResponse(content={
+        "schema_version": "v1",
+        "name_for_model": "pii_redactor",
+        "description_for_model": (
+            "Detect and redact PII (Personally Identifiable Information) from text. "
+            "Supports PERSON, EMAIL_ADDRESS, PHONE_NUMBER, LOCATION, CREDIT_CARD, US_SSN, IP_ADDRESS, and more."
+        ),
+        "api": {
+            "type": "openapi",
+            "url": f"{BASE_URL}/openapi.json",
+        },
+        "tools": [
+            {
+                "name": "redact_pii",
+                "description": "Redact PII from an array of text strings.",
+                "endpoint": {"method": "POST", "path": "/api/redact", "base_url": BASE_URL},
+            },
+            {
+                "name": "analyze_pii",
+                "description": "Detect PII entities with positions and confidence scores.",
+                "endpoint": {"method": "POST", "path": "/api/analyze", "base_url": BASE_URL},
+            },
+        ],
+    })
+
+
 @app.post("/api/redact", response_model=RedactResponse)
 async def redact(body: TextRequest):
     start = time.time()

@@ -1,0 +1,141 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "PII Redactor",
+  "name_for_model": "pii_redactor",
+  "description_for_human": "Detect and redact Personally Identifiable Information (PII) from text using Microsoft Presidio. Supports 20+ entity types including names, emails, phone numbers, SSNs, and more.",
+  "description_for_model": "Use this tool to detect and redact PII (Personally Identifiable Information) from text. It can identify and replace entities like PERSON, EMAIL_ADDRESS, PHONE_NUMBER, LOCATION, CREDIT_CARD, US_SSN, IP_ADDRESS, and more. Requires x402 USDC payment on Base mainnet for production use.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://pii-redactor-production-1dd5.up.railway.app/openapi.json"
+  },
+  "tools": [
+    {
+      "name": "redact_pii",
+      "description": "Redact PII from an array of text strings. Replaces detected entities with readable placeholders like [PERSON], [EMAIL_ADDRESS], [PHONE_NUMBER], etc.",
+      "endpoint": {
+        "method": "POST",
+        "path": "/api/redact",
+        "base_url": "https://pii-redactor-production-1dd5.up.railway.app"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "texts": {
+            "type": "array",
+            "items": { "type": "string", "maxLength": 5000 },
+            "minItems": 1,
+            "maxItems": 10,
+            "description": "Array of text strings to redact PII from (max 10, each up to 5000 chars)"
+          },
+          "language": {
+            "type": "string",
+            "default": "en",
+            "description": "ISO 639-1 language code (default: 'en')"
+          },
+          "entities": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Optional list of entity types to detect (e.g. ['PERSON','EMAIL_ADDRESS']). Omit to detect all types.",
+            "examples": [["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "LOCATION", "CREDIT_CARD", "US_SSN"]]
+          }
+        },
+        "required": ["texts"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "redacted_text": { "type": "string" },
+                "original_length": { "type": "integer" },
+                "entities_found": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "entity_type": { "type": "string" },
+                      "count": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total_entities_redacted": { "type": "integer" },
+              "processing_time_ms": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "analyze_pii",
+      "description": "Analyze text to detect PII entities without modifying the text. Returns entity types, positions, and confidence scores.",
+      "endpoint": {
+        "method": "POST",
+        "path": "/api/analyze",
+        "base_url": "https://pii-redactor-production-1dd5.up.railway.app"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "texts": {
+            "type": "array",
+            "items": { "type": "string", "maxLength": 5000 },
+            "minItems": 1,
+            "maxItems": 10,
+            "description": "Array of text strings to analyze for PII"
+          },
+          "language": {
+            "type": "string",
+            "default": "en",
+            "description": "ISO 639-1 language code (default: 'en')"
+          },
+          "entities": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Optional list of entity types to detect. Omit to detect all types."
+          }
+        },
+        "required": ["texts"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "entities": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "entity_type": { "type": "string" },
+                      "text": { "type": "string" },
+                      "start": { "type": "integer" },
+                      "end": { "type": "integer" },
+                      "score": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "contact_email": "",
+  "legal_info_url": "https://pii-redactor-production-1dd5.up.railway.app/health"
+}
